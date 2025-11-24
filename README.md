@@ -112,6 +112,28 @@ python3 generate_report.py mysql_benchmark_YYYYMMDD_HHMMSS
 python3 generate_markdown_report.py mysql_benchmark_YYYYMMDD_HHMMSS
 ```
 
+### 7. 测试场景说明
+
+使用 `merge_reports.py` 脚本可以将多个环境的测试报告合并成一个综合报告:
+
+```bash
+# 合并多个环境的报告
+python3 merge_reports.py idc,idc.trx1,huawei,aliyun,aliyun.trx1
+
+# 或者合并任意环境组合
+python3 merge_reports.py env1,env2,env3
+```
+
+**脚本功能:**
+- 自动读取各环境目录下的 `performance_report.md` 文件
+- 生成性能对比摘要和结论分析
+- 提取并转换 innodb_buffer_pool_size 为 GB 单位
+- 创建统一的性能汇总表格(移除监控样本数列，添加环境标识)
+- 按章节组织各环境的详细报告
+- 在文档末尾统一放置监控数据说明和分析
+
+**输出文件:** `mysql_sysbench.md` - 包含所有环境的综合性能测试报告
+
 ## 测试场景说明
 
 | 场景 | 描述 | 主要指标 |
@@ -207,6 +229,7 @@ sysbench_report/
 ├── mysql_benchmark.sh                  # 主测试脚本
 ├── generate_report.py                  # HTML报告生成器
 ├── generate_markdown_report.py         # Markdown报告生成器
+├── merge_reports.py                    # 多环境报告合并脚本
 └── final_mysql_benchmark_report/       # 示例测试结果
     ├── performance_report.html         # HTML格式报告
     ├── performance_report.md           # Markdown格式报告

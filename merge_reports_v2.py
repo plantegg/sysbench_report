@@ -13,6 +13,11 @@ def extract_innodb_buffer_pool_size(content):
         return f"{gb_size:.0f}GB"
     return "N/A"
 
+def extract_innodb_flush_log(content):
+    """Extract innodb_flush_log_at_trx_commit value"""
+    match = re.search(r'innodb_flush_log_at_trx_commit\s+(\d+)', content)
+    return match.group(1) if match else "N/A"
+
 def extract_all_performance_data(content):
     """Extract all test results for all thread counts"""
     lines = content.split('\n')
@@ -35,11 +40,6 @@ def extract_all_performance_data(content):
     
     return results
 
-def extract_innodb_flush_log(content):
-    """Extract innodb_flush_log_at_trx_commit value"""
-    match = re.search(r'innodb_flush_log_at_trx_commit\s+(\d+)', content)
-    return match.group(1) if match else "N/A"
-
 def extract_cpu_memory_info(content):
     """Extract CPU model, cores, and memory info"""
     cpu_match = re.search(r'型号名称：\s*(.+)', content)
@@ -58,24 +58,8 @@ def extract_cpu_memory_info(content):
     
     return cpu_model, cores, memory
 
-def extract_summary_table_rows(content, env_name):
-    """Extract 128-thread test results and add environment column"""
-    lines = content.split('\n')
-    rows = []
-    
-    for line in lines:
-        if '| oltp_' in line and '| 128 |' in line:
-            # Remove monitoring sample count column and add environment
-            parts = line.split('|')
-            if len(parts) >= 13:
-                # Remove the monitoring sample count column (index 11)
-                new_parts = parts[:11] + parts[12:13] + [f' {env_name} '] + parts[13:]
-                rows.append('|'.join(new_parts))
-    
-    return rows
-
 def merge_reports(env_names):
-    """Merge multiple performance reports"""
+    """Merge multiple performance reports with enhanced details"""
     
     # Read all reports
     reports = {}
@@ -107,7 +91,7 @@ def merge_reports(env_names):
         }
     
     # Generate merged report
-    output = f"""# MySQL Sysbench 性能测试综合报告
+    output = f"""# MySQL Sysbench 性能测试综合报告 (详细版)
 
 ## 📊 执行摘要
 
@@ -135,9 +119,9 @@ def merge_reports(env_names):
 
 ---
 
-## 🏆 性能对比
+## 🏆 性能排名
 
-### 点查询性能 (oltp_point_select)
+### 点查询性能对比 (oltp_point_select)
 
 """
     
@@ -154,7 +138,7 @@ def merge_reports(env_names):
                 row += f" {qps} |"
             output += row + "\n"
     
-    output += "\n### 只写性能 (oltp_write_only)\n\n"
+    output += "\n### 只写性能对比 (oltp_write_only)\n\n"
     output += "| 环境 | 1线程 | 8线程 | 16线程 | 32线程 | 64线程 | 128线程 |\n"
     output += "|------|-------|-------|--------|--------|--------|----------|\n"
     
@@ -167,7 +151,7 @@ def merge_reports(env_names):
                 row += f" {qps} |"
             output += row + "\n"
     
-    output += "\n### 读写混合性能 (oltp_read_write)\n\n"
+    output += "\n### 读写混合性能对比 (oltp_read_write)\n\n"
     output += "| 环境 | 1线程 | 8线程 | 16线程 | 32线程 | 64线程 | 128线程 |\n"
     output += "|------|-------|-------|--------|--------|--------|----------|\n"
     
@@ -180,7 +164,7 @@ def merge_reports(env_names):
                 row += f" {qps} |"
             output += row + "\n"
     
-    output += "\n### 只读性能 (oltp_read_only)\n\n"
+    output += "\n### 只读性能对比 (oltp_read_only)\n\n"
     output += "| 环境 | 1线程 | 8线程 | 16线程 | 32线程 | 64线程 | 128线程 |\n"
     output += "|------|-------|-------|--------|--------|--------|----------|\n"
     
@@ -198,7 +182,7 @@ def merge_reports(env_names):
 
 ## 📈 延迟分析
 
-### 点查询延迟 (95%分位, ms)
+### 点查询延迟对比 (95%分位, ms)
 
 | 环境 | 1线程 | 8线程 | 16线程 | 32线程 | 64线程 | 128线程 |
 |------|-------|-------|--------|--------|--------|----------|
@@ -213,7 +197,7 @@ def merge_reports(env_names):
                 row += f" {latency} |"
             output += row + "\n"
     
-    output += "\n### 读写混合延迟 (95%分位, ms)\n\n"
+    output += "\n### 读写混合延迟对比 (95%分位, ms)\n\n"
     output += "| 环境 | 1线程 | 8线程 | 16线程 | 32线程 | 64线程 | 128线程 |\n"
     output += "|------|-------|-------|--------|--------|--------|----------|\n"
     
@@ -231,17 +215,43 @@ def merge_reports(env_names):
 
 ## 💡 关键发现
 
-1. **CPU架构影响**: 不同CPU架构在各场景下表现差异明显
-2. **事务持久化设置**: innodb_flush_log_at_trx_commit设置对写入性能有显著影响
-3. **并发扩展性**: 各环境在不同并发级别下的扩展性表现不同
-4. **延迟控制**: 高并发下延迟控制能力体现系统稳定性
+### 性能特点
+
+1. **CPU架构影响**
+   - 不同CPU架构在各场景下表现差异明显
+   - 单核性能对点查询场景影响显著
+
+2. **事务持久化设置**
+   - innodb_flush_log_at_trx_commit=1 vs 2 对写入性能影响明显
+   - 建议根据业务对数据安全性要求选择合适配置
+
+3. **并发扩展性**
+   - 各环境在不同并发级别下的扩展性表现不同
+   - 需要根据实际业务并发选择合适的硬件配置
+
+4. **延迟控制**
+   - 高并发下延迟控制能力体现系统稳定性
+   - 95%分位延迟是衡量用户体验的重要指标
+
+### 环境推荐
 
 """
     
-    # Add individual chapters
+    # Find best performers
+    best_point_select = max(env_names, key=lambda x: int(env_data[x]['performance'].get('oltp_point_select', {}).get('128', {}).get('qps', '0').replace(',', '')) if env_data[x]['performance'].get('oltp_point_select', {}).get('128', {}).get('qps', '0').replace(',', '').isdigit() else 0)
+    best_write = max(env_names, key=lambda x: int(env_data[x]['performance'].get('oltp_write_only', {}).get('128', {}).get('qps', '0').replace(',', '')) if env_data[x]['performance'].get('oltp_write_only', {}).get('128', {}).get('qps', '0').replace(',', '').isdigit() else 0)
+    
+    output += f"- **查询密集型业务**: 推荐 **{best_point_select}** 环境\n"
+    output += f"- **写入密集型业务**: 推荐 **{best_write}** 环境\n"
+    output += "- **混合负载**: 需要综合考虑QPS、延迟和成本\n"
+    
+    output += "\n---\n\n"
+    
+    # Add individual chapters with full details
     for i, env in enumerate(env_names, 1):
         if env in reports:
-            output += f"# 第{['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][i-1]}章：{env}\n\n"
+            chapter_num = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][i-1]
+            output += f"# 第{chapter_num}章：{env} 环境详细报告\n\n"
             
             # Extract content after first header
             content = reports[env]
@@ -254,14 +264,14 @@ def merge_reports(env_names):
             
             chapter_content = '\n'.join(lines[start_idx:])
             
-            # Remove monitoring sample count column from tables
+            # Process chapter content
             chapter_lines = chapter_content.split('\n')
             processed_lines = []
             in_table = False
             skip_section = False
             
             for line in chapter_lines:
-                # Skip all duplicate sections and timestamp placeholders
+                # Skip duplicate sections and timestamp placeholders
                 if (line.startswith('### 监控数据说明') or 
                     line.startswith('## 测试结果分析') or 
                     line.startswith('### 性能指标') or
@@ -278,38 +288,30 @@ def merge_reports(env_names):
                 elif skip_section:
                     continue
                 
-                # Check if we're in the main performance table
+                # Process table
                 if '| 测试场景 | 并发数 | QPS |' in line:
                     in_table = True
-                    # Remove 监控样本数 column from header
                     parts = line.split('|')
                     if '监控样本数' in line:
-                        # Find and remove 监控样本数 column
-                        new_parts = []
-                        for part in parts:
-                            if '监控样本数' not in part:
-                                new_parts.append(part)
+                        new_parts = [p for p in parts if '监控样本数' not in p]
                         processed_lines.append('|'.join(new_parts))
                     else:
                         processed_lines.append(line)
                 elif in_table and line.startswith('|------'):
-                    # Remove corresponding separator
                     parts = line.split('|')
-                    if len(parts) > 12:  # Has monitoring sample count column
+                    if len(parts) > 12:
                         new_parts = parts[:11] + parts[12:]
                         processed_lines.append('|'.join(new_parts))
                     else:
                         processed_lines.append(line)
                 elif in_table and line.startswith('| oltp_'):
-                    # Remove monitoring sample count data
                     parts = line.split('|')
-                    if len(parts) > 12:  # Has monitoring sample count column
+                    if len(parts) > 12:
                         new_parts = parts[:11] + parts[12:]
                         processed_lines.append('|'.join(new_parts))
                     else:
                         processed_lines.append(line)
                 elif in_table and (line.strip() == '' or not line.startswith('|')):
-                    # End of table
                     in_table = False
                     processed_lines.append(line)
                 else:
@@ -362,14 +364,14 @@ def merge_reports(env_names):
     output += f"*报告生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*\n"
     
     # Write output
-    with open('mysql_sysbench.md', 'w', encoding='utf-8') as f:
+    with open('mysql_sysbench_v2.md', 'w', encoding='utf-8') as f:
         f.write(output)
     
-    print(f"合并报告已生成: mysql_sysbench.md")
+    print(f"详细版合并报告已生成: mysql_sysbench_v2.md")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python3 merge_reports.py env1,env2,env3,...")
+        print("Usage: python3 merge_reports_v2.py env1,env2,env3,...")
         sys.exit(1)
     
     env_names = sys.argv[1].split(',')
