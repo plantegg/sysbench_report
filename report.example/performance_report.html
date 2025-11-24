@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MySQL 性能测试报告 v7 Final</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background-color: #f0f0f0; padding: 20px; border-radius: 5px; }
+        .section { margin: 20px 0; }
+        table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .scenario { background-color: #e6f3ff; font-weight: bold; }
+        pre { background-color: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .time { font-size: 0.8em; color: #666; }
+        .tsar-data { background-color: #fff3cd; }
+        .config-section { background-color: #e8f5e8; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MySQL 性能测试报告 v7 Final</h1>
+        <p>测试时间: 2025-11-23 19:09:41</p>
+        <p>测试工具: sysbench + tsar (按时间段精确匹配)</p>
+        <p>tsar数据样本: 1310 条记录</p>
+    </div>
+    
+    <div class="section">
+        <h2>测试配置信息</h2>
+        <div class="config-section">
+            <pre>=== 测试配置信息 ===
+MYSQL_HOST: 127.0.0.1
+MYSQL_PORT: 3306
+TABLES: 16
+TABLE_SIZE: 1000000
+TEST_TIME: 30
+</pre>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>MySQL配置参数</h2>
+        <div class="config-section">
+            <pre>mysql: [Warning] Using a password on the command line interface can be insecure.
+Variable_name	Value
+innodb_buffer_pool_size	17179869184
+innodb_flush_log_at_trx_commit	2
+</pre>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>压测服务器配置</h2>
+        <pre>=== CPU 信息 ===
+Architecture:          x86_64
+CPU op-mode(s):        32-bit, 64-bit
+Byte Order:            Little Endian
+CPU(s):                48
+On-line CPU(s) list:   0-47
+Thread(s) per core:    2
+Core(s) per socket:    12
+座：                 2
+NUMA 节点：         2
+厂商 ID：           GenuineIntel
+CPU 系列：          6
+型号：              143
+型号名称：        INTEL(R) XEON(R) SILVER 4510
+步进：              8
+CPU MHz：             2400.000
+BogoMIPS：            4800.00
+虚拟化：           VT-x
+L1d 缓存：          48K
+L1i 缓存：          32K
+L2 缓存：           2048K
+L3 缓存：           30720K
+NUMA 节点0 CPU：    0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46
+NUMA 节点1 CPU：    1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47
+Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch epb cat_l3 cat_l2 cdp_l3 invpcid_single intel_pt cdp_l2 ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local dtherm ida arat pln pts avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq cldemote movdiri movdir64b md_clear pconfig spec_ctrl intel_stibp flush_l1d arch_capabilities
+
+=== 内存信息 ===
+              total        used        free      shared  buff/cache   available
+Mem:           376G         29G        342G        2.3G        4.6G        343G
+Swap:            0B          0B          0B
+</pre>
+    </div>
+    
+    <div class="section">
+        <h2>性能测试结果汇总 (含CPU/IO监控数据)</h2>
+        <table>
+            <tr>
+                <th>测试场景</th>
+                <th>并发数</th>
+                <th>QPS</th>
+                <th>TPS</th>
+                <th>平均延迟(ms)</th>
+                <th>95%延迟(ms)</th>
+                <th>CPU利用率(%)</th>
+                <th>CPU用户(%)</th>
+                <th>CPU系统(%)</th>
+                <th>CPU等待(%)</th>
+                <th>IO利用率(%)</th>
+                <th>监控样本数</th>
+                <th>测试时间段</th>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_point_select</td>
+                <td>1</td>
+                <td>33,572</td>
+                <td>33,572</td>
+                <td>0.03</td>
+                <td>0.03</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.7</td>
+                <td class="tsar-data">0.5</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 18:56:52 ~ 2025-11-23 18:57:22</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_point_select</td>
+                <td>8</td>
+                <td>186,824</td>
+                <td>186,824</td>
+                <td>0.04</td>
+                <td>0.05</td>
+                <td class="tsar-data">0.3</td>
+                <td class="tsar-data">4.9</td>
+                <td class="tsar-data">3.2</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 18:57:24 ~ 2025-11-23 18:57:54</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_point_select</td>
+                <td>16</td>
+                <td>269,096</td>
+                <td>269,096</td>
+                <td>0.06</td>
+                <td>0.09</td>
+                <td class="tsar-data">0.7</td>
+                <td class="tsar-data">7.9</td>
+                <td class="tsar-data">4.7</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 18:57:56 ~ 2025-11-23 18:58:26</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_point_select</td>
+                <td>32</td>
+                <td>318,015</td>
+                <td>318,015</td>
+                <td>0.10</td>
+                <td>0.16</td>
+                <td class="tsar-data">0.8</td>
+                <td class="tsar-data">10.3</td>
+                <td class="tsar-data">5.9</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 18:58:28 ~ 2025-11-23 18:58:58</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_point_select</td>
+                <td>64</td>
+                <td>307,471</td>
+                <td>307,471</td>
+                <td>0.21</td>
+                <td>0.28</td>
+                <td class="tsar-data">0.8</td>
+                <td class="tsar-data">10.4</td>
+                <td class="tsar-data">5.8</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 18:59:00 ~ 2025-11-23 18:59:30</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_point_select</td>
+                <td>128</td>
+                <td>289,999</td>
+                <td>289,999</td>
+                <td>0.44</td>
+                <td>0.58</td>
+                <td class="tsar-data">0.9</td>
+                <td class="tsar-data">10.5</td>
+                <td class="tsar-data">5.7</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 18:59:32 ~ 2025-11-23 19:00:02</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_only</td>
+                <td>1</td>
+                <td>12,542</td>
+                <td>784</td>
+                <td>1.28</td>
+                <td>1.32</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">1.4</td>
+                <td class="tsar-data">0.3</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:00:04 ~ 2025-11-23 19:00:34</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_only</td>
+                <td>8</td>
+                <td>55,531</td>
+                <td>3,471</td>
+                <td>2.30</td>
+                <td>3.55</td>
+                <td class="tsar-data">0.2</td>
+                <td class="tsar-data">8.8</td>
+                <td class="tsar-data">1.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:00:36 ~ 2025-11-23 19:01:06</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_only</td>
+                <td>16</td>
+                <td>72,489</td>
+                <td>4,531</td>
+                <td>3.53</td>
+                <td>5.47</td>
+                <td class="tsar-data">0.2</td>
+                <td class="tsar-data">13.4</td>
+                <td class="tsar-data">1.5</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:01:08 ~ 2025-11-23 19:01:38</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_only</td>
+                <td>32</td>
+                <td>76,153</td>
+                <td>4,760</td>
+                <td>6.72</td>
+                <td>9.39</td>
+                <td class="tsar-data">0.2</td>
+                <td class="tsar-data">14.7</td>
+                <td class="tsar-data">1.6</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:01:40 ~ 2025-11-23 19:02:10</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_only</td>
+                <td>64</td>
+                <td>75,745</td>
+                <td>4,734</td>
+                <td>13.52</td>
+                <td>17.01</td>
+                <td class="tsar-data">0.3</td>
+                <td class="tsar-data">14.7</td>
+                <td class="tsar-data">1.7</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:02:12 ~ 2025-11-23 19:02:42</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_only</td>
+                <td>128</td>
+                <td>74,513</td>
+                <td>4,657</td>
+                <td>27.48</td>
+                <td>31.94</td>
+                <td class="tsar-data">0.3</td>
+                <td class="tsar-data">14.6</td>
+                <td class="tsar-data">1.7</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:02:44 ~ 2025-11-23 19:03:14</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_write</td>
+                <td>1</td>
+                <td>11,375</td>
+                <td>569</td>
+                <td>1.76</td>
+                <td>1.89</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">1.6</td>
+                <td class="tsar-data">0.5</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">2.1</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:03:16 ~ 2025-11-23 19:03:46</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_write</td>
+                <td>8</td>
+                <td>58,118</td>
+                <td>2,906</td>
+                <td>2.75</td>
+                <td>3.96</td>
+                <td class="tsar-data">0.2</td>
+                <td class="tsar-data">10.3</td>
+                <td class="tsar-data">1.7</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">3.0</td>
+                <td class="tsar-data">32</td>
+                <td class="time">2025-11-23 19:03:48 ~ 2025-11-23 19:04:19</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_write</td>
+                <td>16</td>
+                <td>69,645</td>
+                <td>3,482</td>
+                <td>4.59</td>
+                <td>7.43</td>
+                <td class="tsar-data">0.2</td>
+                <td class="tsar-data">13.4</td>
+                <td class="tsar-data">1.9</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">3.5</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:04:21 ~ 2025-11-23 19:04:51</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_write</td>
+                <td>32</td>
+                <td>71,619</td>
+                <td>3,581</td>
+                <td>8.93</td>
+                <td>13.95</td>
+                <td class="tsar-data">0.3</td>
+                <td class="tsar-data">14.1</td>
+                <td class="tsar-data">2.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">3.8</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:04:53 ~ 2025-11-23 19:05:23</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_write</td>
+                <td>64</td>
+                <td>72,613</td>
+                <td>3,631</td>
+                <td>17.62</td>
+                <td>32.53</td>
+                <td class="tsar-data">0.3</td>
+                <td class="tsar-data">14.2</td>
+                <td class="tsar-data">1.9</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">3.8</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:05:25 ~ 2025-11-23 19:05:55</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_read_write</td>
+                <td>128</td>
+                <td>72,912</td>
+                <td>3,646</td>
+                <td>35.09</td>
+                <td>75.82</td>
+                <td class="tsar-data">0.3</td>
+                <td class="tsar-data">14.3</td>
+                <td class="tsar-data">1.9</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">3.5</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:05:57 ~ 2025-11-23 19:06:27</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_write_only</td>
+                <td>1</td>
+                <td>20,554</td>
+                <td>3,426</td>
+                <td>0.29</td>
+                <td>0.38</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">1.9</td>
+                <td class="tsar-data">1.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">3.5</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:06:29 ~ 2025-11-23 19:06:59</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_write_only</td>
+                <td>8</td>
+                <td>84,693</td>
+                <td>14,115</td>
+                <td>0.57</td>
+                <td>0.83</td>
+                <td class="tsar-data">0.3</td>
+                <td class="tsar-data">9.2</td>
+                <td class="tsar-data">3.0</td>
+                <td class="tsar-data">0.1</td>
+                <td class="tsar-data">9.1</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:07:01 ~ 2025-11-23 19:07:31</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_write_only</td>
+                <td>16</td>
+                <td>104,302</td>
+                <td>17,384</td>
+                <td>0.92</td>
+                <td>1.52</td>
+                <td class="tsar-data">0.4</td>
+                <td class="tsar-data">11.2</td>
+                <td class="tsar-data">3.3</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">10.1</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:07:33 ~ 2025-11-23 19:08:03</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_write_only</td>
+                <td>32</td>
+                <td>114,258</td>
+                <td>19,043</td>
+                <td>1.68</td>
+                <td>3.19</td>
+                <td class="tsar-data">0.4</td>
+                <td class="tsar-data">11.8</td>
+                <td class="tsar-data">3.1</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">10.9</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:08:05 ~ 2025-11-23 19:08:35</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_write_only</td>
+                <td>64</td>
+                <td>116,587</td>
+                <td>19,431</td>
+                <td>3.29</td>
+                <td>7.43</td>
+                <td class="tsar-data">0.5</td>
+                <td class="tsar-data">12.0</td>
+                <td class="tsar-data">3.0</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">9.3</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:08:37 ~ 2025-11-23 19:09:07</td>
+            </tr>
+            <tr>
+                <td class="scenario">oltp_write_only</td>
+                <td>128</td>
+                <td>127,103</td>
+                <td>21,184</td>
+                <td>6.04</td>
+                <td>14.21</td>
+                <td class="tsar-data">0.5</td>
+                <td class="tsar-data">12.3</td>
+                <td class="tsar-data">3.2</td>
+                <td class="tsar-data">0.0</td>
+                <td class="tsar-data">8.7</td>
+                <td class="tsar-data">31</td>
+                <td class="time">2025-11-23 19:09:09 ~ 2025-11-23 19:09:39</td>
+            </tr>
+        </table>
+    
+    <div class="section">
+        <h3>监控数据说明</h3>
+        <table>
+            <tr>
+                <th>报告列名</th>
+                <th>tsar对应列</th>
+                <th>说明</th>
+            </tr>
+            <tr>
+                <td>CPU利用率(%)</td>
+                <td>util</td>
+                <td>总体CPU使用率</td>
+            </tr>
+            <tr>
+                <td>CPU用户(%)</td>
+                <td>user</td>
+                <td>用户态CPU使用率</td>
+            </tr>
+            <tr>
+                <td>CPU系统(%)</td>
+                <td>sys</td>
+                <td>内核态CPU使用率</td>
+            </tr>
+            <tr>
+                <td>CPU等待(%)</td>
+                <td>wait</td>
+                <td>IO等待时间占用的CPU</td>
+            </tr>
+            <tr>
+                <td>IO利用率(%)</td>
+                <td>util (IO部分)</td>
+                <td>磁盘IO使用率</td>
+            </tr>
+        </table>
+    </div>
+    </div>
+    
+    <div class="section">
+        <h2>说明</h2>
+        <ul>
+            <li>CPU/IO数据来源于tsar监控日志，按测试时间段精确匹配并计算平均值</li>
+            <li>监控样本数表示该测试时间段内tsar记录的数据点数量</li>
+            <li>黄色背景列为系统监控数据，与性能数据时间精确对应</li>
+            <li>CPU利用率 = 总CPU使用率，CPU用户 = 用户态CPU，CPU系统 = 内核态CPU，CPU等待 = IO等待</li>
+        </ul>
+    </div>
+    
+</body>
+</html>

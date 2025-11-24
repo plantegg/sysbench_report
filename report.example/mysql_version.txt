@@ -1,0 +1,3 @@
+mysql: [Warning] Using a password on the command line interface can be insecure.
+VERSION()
+5.7.29-log

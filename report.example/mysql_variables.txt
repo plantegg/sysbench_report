@@ -1,0 +1,4 @@
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Variable_name	Value
+innodb_buffer_pool_size	17179869184
+innodb_flush_log_at_trx_commit	2
