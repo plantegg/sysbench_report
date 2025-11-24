@@ -57,13 +57,13 @@ echo "数据准备模式: $NEED_PREPARE" | tee -a "$RESULT_DIR/benchmark.log"
 echo "测试时间: ${TEST_TIME}秒" | tee -a "$RESULT_DIR/benchmark.log"
 echo "表大小: ${TABLE_SIZE}行" | tee -a "$RESULT_DIR/benchmark.log"
 
-# 获取压测服务器配置
-echo "=== 压测服务器配置 ===" | tee -a "$RESULT_DIR/benchmark.log"
+# 获取MySQL服务器配置
+echo "=== MySQL服务器配置 ===" | tee -a "$RESULT_DIR/benchmark.log"
 echo "=== CPU 信息 ===" > "$RESULT_DIR/server_config.txt"
-lscpu >> "$RESULT_DIR/server_config.txt"
+ssh root@$MYSQL_HOST "lscpu" >> "$RESULT_DIR/server_config.txt"
 echo >> "$RESULT_DIR/server_config.txt"
 echo "=== 内存信息 ===" >> "$RESULT_DIR/server_config.txt"
-free -h >> "$RESULT_DIR/server_config.txt"
+ssh root@$MYSQL_HOST "free -h" >> "$RESULT_DIR/server_config.txt"
 
 # 测试 MySQL 连接
 echo "=== 测试 MySQL 连接 ===" | tee -a "$RESULT_DIR/benchmark.log"
