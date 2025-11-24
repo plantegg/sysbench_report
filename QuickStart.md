@@ -64,13 +64,55 @@ set global max_prepared_stmt_count=1048576;
 ./mysql_benchmark.sh benchmark_config.conf 30 false
 ```
 
-## 报告合成
+## 报告合并
 
-如果对不同的参数/不同的机型分别就行了压测，想要对比的话，可以将报告给大模型，用以下提示词来进行多分报告合成：
+如果对不同的参数/不同的机型分别进行了压测，想要对比的话，可以使用 `merge_reports.py` 合并多个环境的测试报告：
+
+### 基本用法
+
+```bash
+# 合并多个环境的报告
+python3 merge_reports.py idc,idc.trx1,huawei,aliyun,aliyun.trx1
+```
+
+### 目录结构要求
 
 ```
- python3 merge_reports.py idc,idc.trx1,huawei,aliyun,aliyun.trx1
+sysbench_report/
+├── merge_reports.py
+├── idc/
+│   └── performance_report.md
+├── idc.trx1/
+│   └── performance_report.md
+├── huawei/
+│   └── performance_report.md
+├── aliyun/
+│   └── performance_report.md
+└── aliyun.trx1/
+    └── performance_report.md
 ```
+
+### 生成的报告
+
+- **mysql_sysbench.md** - 综合性能对比报告，包含：
+  - 📊 环境配置对比表
+  - 🏆 4种场景的性能对比（所有并发级别）
+  - 📈 延迟分析表格
+  - 💡 关键发现和建议
+
+### 详细版报告
+
+如果需要更详细的分析报告：
+
+```bash
+# 生成详细版报告
+python3 merge_reports_v2.py idc,idc.trx1,huawei,aliyun,aliyun.trx1
+```
+
+生成 **mysql_sysbench_v2.md**，额外包含：
+- 智能性能推荐
+- 完整的性能扩展曲线
+- 更详细的环境特点分析
 
 
 

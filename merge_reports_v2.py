@@ -35,7 +35,12 @@ def extract_all_performance_data(content):
                     'qps': parts[3] if len(parts) > 3 else '',
                     'tps': parts[4] if len(parts) > 4 else '',
                     'avg_latency': parts[5] if len(parts) > 5 else '',
-                    'p95_latency': parts[6] if len(parts) > 6 else ''
+                    'p95_latency': parts[6] if len(parts) > 6 else '',
+                    'cpu_util': parts[7] if len(parts) > 7 else '',
+                    'cpu_user': parts[8] if len(parts) > 8 else '',
+                    'cpu_sys': parts[9] if len(parts) > 9 else '',
+                    'cpu_wait': parts[10] if len(parts) > 10 else '',
+                    'io_util': parts[11] if len(parts) > 11 else ''
                 }
     
     return results
@@ -245,6 +250,34 @@ def merge_reports(env_names):
     output += f"- **写入密集型业务**: 推荐 **{best_write}** 环境\n"
     output += "- **混合负载**: 需要综合考虑QPS、延迟和成本\n"
     
+    output += """
+---
+
+## 📊 64线程性能对比
+
+| 测试场景 | idc | idc.trx1 | huawei | aliyun | aliyun.trx1 |
+|---------|-----|----------|--------|--------|-------------|
+"""
+    
+    # Add 64-thread comparison for all scenarios
+    scenarios = ['oltp_point_select', 'oltp_read_only', 'oltp_read_write', 'oltp_write_only']
+    scenario_names = {
+        'oltp_point_select': '点查询',
+        'oltp_read_only': '只读',
+        'oltp_read_write': '读写混合',
+        'oltp_write_only': '只写'
+    }
+    
+    for scenario in scenarios:
+        row = f"| **{scenario_names.get(scenario, scenario)}** |"
+        for env in env_names:
+            if env in env_data and scenario in env_data[env]['performance']:
+                qps = env_data[env]['performance'][scenario].get('64', {}).get('qps', '-')
+                row += f" {qps} |"
+            else:
+                row += " - |"
+        output += row + "\n"
+    
     output += "\n---\n\n"
     
     # Add individual chapters with full details
@@ -299,15 +332,15 @@ def merge_reports(env_names):
                         processed_lines.append(line)
                 elif in_table and line.startswith('|------'):
                     parts = line.split('|')
-                    if len(parts) > 12:
-                        new_parts = parts[:11] + parts[12:]
+                    if len(parts) > 13:
+                        new_parts = parts[:12] + parts[13:]
                         processed_lines.append('|'.join(new_parts))
                     else:
                         processed_lines.append(line)
                 elif in_table and line.startswith('| oltp_'):
                     parts = line.split('|')
-                    if len(parts) > 12:
-                        new_parts = parts[:11] + parts[12:]
+                    if len(parts) > 13:
+                        new_parts = parts[:12] + parts[13:]
                         processed_lines.append('|'.join(new_parts))
                     else:
                         processed_lines.append(line)
@@ -322,9 +355,9 @@ def merge_reports(env_names):
     
     # Add appendix
     output += """
-## 附录：监控指标说明
+# 附录：监控指标说明
 
-### 监控数据说明
+## 监控数据说明
 
 | 报告列名 | tsar对应列 | 说明 |
 |---------|-----------|------|
@@ -334,14 +367,14 @@ def merge_reports(env_names):
 | CPU等待(%) | wait | IO等待时间占用的CPU |
 | IO利用率(%) | util (IO部分) | 磁盘IO使用率 |
 
-### 性能指标说明
+## 性能指标说明
 
 - **QPS (Queries Per Second)**: 每秒查询数，衡量数据库处理查询的能力
 - **TPS (Transactions Per Second)**: 每秒事务数，与QPS在点查询场景下相等
 - **平均延迟**: 所有请求的平均响应时间
 - **95%延迟**: 95%的请求响应时间不超过此值，更能反映用户体验
 
-### 测试场景说明
+## 测试场景说明
 
 | 场景 | 描述 | 主要指标 |
 |------|------|----------|
@@ -350,7 +383,7 @@ def merge_reports(env_names):
 | oltp_read_write | 读写混合事务 | TPS, 延迟 |
 | oltp_write_only | 只写事务 | TPS, IO利用率 |
 
-### 数据来源说明
+## 数据来源说明
 
 - CPU/IO数据来源于tsar监控日志，按测试时间段精确匹配并计算平均值
 - 系统监控数据与性能数据时间精确对应，确保数据准确性

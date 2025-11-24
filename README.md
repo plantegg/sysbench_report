@@ -47,7 +47,7 @@ yum install -y tsar
 编辑 `benchmark_config.conf`:
 ```bash
 # 数据库配置
-MYSQL_HOST=10.127.33.154      # MySQL服务器IP
+MYSQL_HOST=YOUR_MYSQL_HOST      # MySQL服务器IP
 MYSQL_PORT=3316               # MySQL端口
 MYSQL_USER=ren                # MySQL用户名
 MYSQL_PASSWORD=your_password  # MySQL密码
@@ -73,7 +73,7 @@ THREADS="1 128"
 **重要：在 MySQL 服务器上启动 tsar 监控**
 ```bash
 # SSH 到 MySQL 服务器
-ssh root@10.127.33.154
+ssh root@YOUR_MYSQL_HOST
 
 # 启动 tsar 监控 (替换 nvme1n1 为实际磁盘设备)
 tsar --cpu --io -I nvme1n1 -l -i1 >/tmp/tsar.log 2>&1 &

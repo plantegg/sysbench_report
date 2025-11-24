@@ -11,10 +11,10 @@ load_config() {
         source "$config_file"
     else
         echo "配置文件不存在: $config_file，使用默认配置"
-        MYSQL_HOST="10.127.33.154"
+        MYSQL_HOST="YOUR_MYSQL_HOST"
         MYSQL_PORT="3316"
         MYSQL_USER="ren"
-        MYSQL_PASSWORD="123"
+        MYSQL_PASSWORD="your_password"
         MYSQL_DB="sbtest"
         TABLES=16
         TABLE_SIZE=100000
