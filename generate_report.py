@@ -38,7 +38,7 @@ def parse_tsar_log(tsar_file):
                 cpu_user = float(parts[1])
                 cpu_sys = float(parts[2]) 
                 cpu_wait = float(parts[3])
-                cpu_util = float(parts[5])  # CPU总利用率
+                cpu_sirq = float(parts[5])  # CPU软中断
                 
                 # 解析IO数据 (最后一列是IO util)
                 io_util = 0.0
@@ -49,7 +49,7 @@ def parse_tsar_log(tsar_file):
                     'cpu_user': cpu_user,
                     'cpu_sys': cpu_sys,
                     'cpu_wait': cpu_wait,
-                    'cpu_util': cpu_util,
+                    'cpu_sirq': cpu_sirq,
                     'io_util': io_util
                 }
             except (ValueError, IndexError) as e:
@@ -96,7 +96,7 @@ def get_tsar_avg_for_period(tsar_data, start_time, end_time):
         'cpu_user': sum(d['cpu_user'] for d in period_data) / len(period_data),
         'cpu_sys': sum(d['cpu_sys'] for d in period_data) / len(period_data),
         'cpu_wait': sum(d['cpu_wait'] for d in period_data) / len(period_data),
-        'cpu_util': sum(d['cpu_util'] for d in period_data) / len(period_data),
+        'cpu_sirq': sum(d['cpu_sirq'] for d in period_data) / len(period_data),
         'io_util': sum(d['io_util'] for d in period_data) / len(period_data),
         'sample_count': len(period_data)
     }
@@ -271,7 +271,7 @@ def generate_html_report(result_dir):
                 <th>TPS</th>
                 <th>平均延迟(ms)</th>
                 <th>95%延迟(ms)</th>
-                <th>CPU利用率(%)</th>
+                <th>CPU软中断(%)</th>
                 <th>CPU用户(%)</th>
                 <th>CPU系统(%)</th>
                 <th>CPU等待(%)</th>
@@ -282,10 +282,10 @@ def generate_html_report(result_dir):
     
     for result in results:
         tsar_info = ""
-        cpu_util = cpu_user = cpu_sys = cpu_wait = io_util = sample_count = "N/A"
+        cpu_sirq = cpu_user = cpu_sys = cpu_wait = io_util = sample_count = "N/A"
         
         if result['tsar_data']:
-            cpu_util = f"{result['tsar_data']['cpu_util']:.1f}"
+            cpu_sirq = f"{result['tsar_data']['cpu_sirq']:.1f}"
             cpu_user = f"{result['tsar_data']['cpu_user']:.1f}"
             cpu_sys = f"{result['tsar_data']['cpu_sys']:.1f}"
             cpu_wait = f"{result['tsar_data']['cpu_wait']:.1f}"
@@ -302,7 +302,7 @@ def generate_html_report(result_dir):
                 <td>{result['tps']:,.0f}</td>
                 <td>{result['avg_latency']:.2f}</td>
                 <td>{result['p95_latency']:.2f}</td>
-                <td class="tsar-data">{cpu_util}</td>
+                <td class="tsar-data">{cpu_sirq}</td>
                 <td class="tsar-data">{cpu_user}</td>
                 <td class="tsar-data">{cpu_sys}</td>
                 <td class="tsar-data">{cpu_wait}</td>
@@ -323,9 +323,9 @@ def generate_html_report(result_dir):
                 <th>说明</th>
             </tr>
             <tr>
-                <td>CPU利用率(%)</td>
-                <td>util</td>
-                <td>总体CPU使用率</td>
+                <td>CPU软中断(%)</td>
+                <td>sirq</td>
+                <td>软中断CPU使用率</td>
             </tr>
             <tr>
                 <td>CPU用户(%)</td>
@@ -357,7 +357,7 @@ def generate_html_report(result_dir):
             <li>CPU/IO数据来源于tsar监控日志，按测试时间段精确匹配并计算平均值</li>
             <li>监控样本数表示该测试时间段内tsar记录的数据点数量</li>
             <li>黄色背景列为系统监控数据，与性能数据时间精确对应</li>
-            <li>CPU利用率 = 总CPU使用率，CPU用户 = 用户态CPU，CPU系统 = 内核态CPU，CPU等待 = IO等待</li>
+            <li>CPU软中断 = 软中断CPU使用率，CPU用户 = 用户态CPU，CPU系统 = 内核态CPU，CPU等待 = IO等待</li>
         </ul>
     </div>
     

@@ -38,7 +38,7 @@ def parse_tsar_log(tsar_file):
                 cpu_user = float(parts[1])
                 cpu_sys = float(parts[2]) 
                 cpu_wait = float(parts[3])
-                cpu_util = float(parts[5])  # CPU总利用率
+                cpu_sirq = float(parts[5])  # CPU软中断
                 
                 # 解析IO数据 (最后一列是IO util)
                 io_util = 0.0
@@ -49,7 +49,7 @@ def parse_tsar_log(tsar_file):
                     'cpu_user': cpu_user,
                     'cpu_sys': cpu_sys,
                     'cpu_wait': cpu_wait,
-                    'cpu_util': cpu_util,
+                    'cpu_sirq': cpu_sirq,
                     'io_util': io_util
                 }
             except (ValueError, IndexError) as e:
@@ -96,7 +96,7 @@ def get_tsar_avg_for_period(tsar_data, start_time, end_time):
         'cpu_user': sum(d['cpu_user'] for d in period_data) / len(period_data),
         'cpu_sys': sum(d['cpu_sys'] for d in period_data) / len(period_data),
         'cpu_wait': sum(d['cpu_wait'] for d in period_data) / len(period_data),
-        'cpu_util': sum(d['cpu_util'] for d in period_data) / len(period_data),
+        'cpu_sirq': sum(d['cpu_sirq'] for d in period_data) / len(period_data),
         'io_util': sum(d['io_util'] for d in period_data) / len(period_data),
         'sample_count': len(period_data)
     }
@@ -241,14 +241,14 @@ def generate_markdown_report(result_dir):
 
 ## 性能测试结果汇总 (含CPU/IO监控数据)
 
-| 测试场景 | 并发数 | QPS | TPS | 平均延迟(ms) | 95%延迟(ms) | CPU利用率(%) | CPU用户(%) | CPU系统(%) | CPU等待(%) | IO利用率(%) | 监控样本数 | 测试时间段 |
+| 测试场景 | 并发数 | QPS | TPS | 平均延迟(ms) | 95%延迟(ms) | CPU软中断(%) | CPU用户(%) | CPU系统(%) | CPU等待(%) | IO利用率(%) | 监控样本数 | 测试时间段 |
 |---------|--------|-----|-----|-------------|-------------|-------------|------------|------------|------------|-------------|------------|------------|"""
     
     for result in results:
-        cpu_util = cpu_user = cpu_sys = cpu_wait = io_util = sample_count = "N/A"
+        cpu_sirq = cpu_user = cpu_sys = cpu_wait = io_util = sample_count = "N/A"
         
         if result['tsar_data']:
-            cpu_util = f"{result['tsar_data']['cpu_util']:.1f}"
+            cpu_sirq = f"{result['tsar_data']['cpu_sirq']:.1f}"
             cpu_user = f"{result['tsar_data']['cpu_user']:.1f}"
             cpu_sys = f"{result['tsar_data']['cpu_sys']:.1f}"
             cpu_wait = f"{result['tsar_data']['cpu_wait']:.1f}"
@@ -258,7 +258,7 @@ def generate_markdown_report(result_dir):
         time_range = f"{result['start_time']} ~ {result['end_time']}" if result['start_time'] else "N/A"
         
         markdown_content += f"""
-| {result['scenario']} | {result['threads']} | {result['qps']:,.0f} | {result['tps']:,.0f} | {result['avg_latency']:.2f} | {result['p95_latency']:.2f} | {cpu_util} | {cpu_user} | {cpu_sys} | {cpu_wait} | {io_util} | {sample_count} | {time_range} |"""
+| {result['scenario']} | {result['threads']} | {result['qps']:,.0f} | {result['tps']:,.0f} | {result['avg_latency']:.2f} | {result['p95_latency']:.2f} | {cpu_sirq} | {cpu_user} | {cpu_sys} | {cpu_wait} | {io_util} | {sample_count} | {time_range} |"""
     
     markdown_content += """
 
@@ -266,7 +266,7 @@ def generate_markdown_report(result_dir):
 
 | 报告列名 | tsar对应列 | 说明 |
 |---------|-----------|------|
-| CPU利用率(%) | util | 总体CPU使用率 |
+| CPU软中断(%) | sirq | 软中断CPU使用率 |
 | CPU用户(%) | user | 用户态CPU使用率 |
 | CPU系统(%) | sys | 内核态CPU使用率 |
 | CPU等待(%) | wait | IO等待时间占用的CPU |
@@ -280,7 +280,7 @@ def generate_markdown_report(result_dir):
 - **延迟 (Latency)**: 查询响应时间，包括平均延迟和95%分位延迟
 
 ### 系统监控指标
-- **CPU利用率**: 总体CPU使用率
+- **CPU软中断**: 软中断CPU使用率
 - **CPU用户**: 用户态CPU使用率
 - **CPU系统**: 内核态CPU使用率  
 - **CPU等待**: IO等待时间占用的CPU

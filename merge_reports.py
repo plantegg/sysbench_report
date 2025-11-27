@@ -31,7 +31,7 @@ def extract_all_performance_data(content):
                     'tps': parts[4] if len(parts) > 4 else '',
                     'avg_latency': parts[5] if len(parts) > 5 else '',
                     'p95_latency': parts[6] if len(parts) > 6 else '',
-                    'cpu_util': parts[7] if len(parts) > 7 else '',
+                    'cpu_sirq': parts[7] if len(parts) > 7 else '',
                     'cpu_user': parts[8] if len(parts) > 8 else '',
                     'cpu_sys': parts[9] if len(parts) > 9 else '',
                     'cpu_wait': parts[10] if len(parts) > 10 else '',
@@ -359,7 +359,7 @@ def merge_reports(env_names):
 
 | 报告列名 | tsar对应列 | 说明 |
 |---------|-----------|------|
-| CPU利用率(%) | util | 总体CPU使用率 |
+| CPU软中断(%) | sirq | 软中断CPU使用率 |
 | CPU用户(%) | user | 用户态CPU使用率 |
 | CPU系统(%) | sys | 内核态CPU使用率 |
 | CPU等待(%) | wait | IO等待时间占用的CPU |
