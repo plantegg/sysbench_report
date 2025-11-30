@@ -215,6 +215,19 @@ def merge_reports(env_names):
                 row += f" {latency} |"
             output += row + "\n"
     
+    output += "\n### 只写延迟对比 (95%分位, ms)\n\n"
+    output += "| 环境 | 1线程 | 8线程 | 16线程 | 32线程 | 64线程 | 128线程 |\n"
+    output += "|------|-------|-------|--------|--------|--------|----------|\n"
+    
+    for env in env_names:
+        if env in env_data and 'oltp_write_only' in env_data[env]['performance']:
+            perf = env_data[env]['performance']['oltp_write_only']
+            row = f"| **{env}** |"
+            for threads in ['1', '8', '16', '32', '64', '128']:
+                latency = perf.get(threads, {}).get('p95_latency', '-')
+                row += f" {latency} |"
+            output += row + "\n"
+    
     output += """
 ---
 
@@ -255,9 +268,15 @@ def merge_reports(env_names):
 
 ## 📊 64线程性能对比
 
-| 测试场景 | idc | idc.trx1 | huawei | aliyun | aliyun.trx1 |
-|---------|-----|----------|--------|--------|-------------|
 """
+    
+    # Generate dynamic table header
+    header = "| 测试场景 |"
+    separator = "|---------|"
+    for env in env_names:
+        header += f" {env} |"
+        separator += "--------|"
+    output += header + "\n" + separator + "\n"
     
     # Add 64-thread comparison for all scenarios
     scenarios = ['oltp_point_select', 'oltp_read_only', 'oltp_read_write', 'oltp_write_only']
