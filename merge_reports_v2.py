@@ -300,9 +300,10 @@ def merge_reports(env_names):
     output += "\n---\n\n"
     
     # Add individual chapters with full details
+    chinese_numbers = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五']
     for i, env in enumerate(env_names, 1):
         if env in reports:
-            chapter_num = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][i-1]
+            chapter_num = chinese_numbers[i-1] if i <= len(chinese_numbers) else str(i)
             output += f"# 第{chapter_num}章：{env} 环境详细报告\n\n"
             
             # Extract content after first header
