@@ -2,6 +2,8 @@
 
 基于 sysbench + tsar 的 MySQL 性能压测和监控解决方案，支持自动化测试和完整的性能报告生成。
 
+输出结果示例：https://plantegg.github.io/2025/11/29/mysql_sysbench_v2/
+
 ## 功能特性
 
 - ✅ **完整性能测试**: 支持点查询、只读、读写混合、只写四种场景
