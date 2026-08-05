@@ -70,6 +70,25 @@ THREADS="1 128"
 
 ### 3. 测试前准备
 
+**调整 max_prepared_stmt_count（必须在 prepare 之前）**
+
+sysbench 在高并发（如 128 线程 × 16 表）时会创建大量 prepared statements，容易触发 MySQL 默认的 16382 上限导致报错：
+
+```
+FATAL: MySQL error: 1461 "Can't create more than max_prepared_stmt_count statements (current value: 16382)"
+```
+
+在执行 prepare 和 run 之前，先调大该参数：
+
+```sql
+-- 自建 MySQL：直接在线修改
+SET GLOBAL max_prepared_stmt_count = 1048576;
+
+-- 云托管服务（如 AWS Aurora、阿里云 RDS）：需要通过参数组/控制台修改后重启生效
+-- Aurora: 创建自定义 DB Cluster Parameter Group，设置 max_prepared_stmt_count=1048576
+-- 阿里云 RDS: 在控制台「参数设置」中修改
+```
+
 **重要：在 MySQL 服务器上启动 tsar 监控**
 ```bash
 # SSH 到 MySQL 服务器
@@ -246,13 +265,46 @@ sysbench_report/
 | **点查询** | 17,109 QPS | **321,410 QPS** | **18.9倍** | 12.9% | 0.1% |
 | **只写** | 12,740 QPS | **139,564 QPS** | **10.9倍** | 6.4% | 52.3% |
 
+## 压测 PaaS / 托管数据库（Aurora、RDS 等）
+
+对于 AWS Aurora、阿里云 RDS、华为云 GaussDB 等 PaaS 类托管数据库服务，与自建 MySQL 压测有以下差异：
+
+**无法 SSH 到数据库服务器**：托管服务不提供操作系统级访问，因此：
+- 无法安装 tsar 采集 CPU/IO 指标
+- 无法直接读取 MySQL 服务器的 lscpu、free 等信息
+- 报告中 CPU/IO 监控列会显示 N/A
+
+**替代监控方案**：
+- AWS Aurora/RDS：使用 CloudWatch 指标（CPUUtilization、WriteIOPS、ReadIOPS、CommitLatency）
+- 阿里云 RDS：使用云监控或 DAS 性能洞察
+- 华为云：使用 Cloud Eye 监控
+
+**参数修改方式不同**：
+- `max_prepared_stmt_count` 等参数不能通过 `SET GLOBAL` 修改（权限不足）
+- 需要通过云控制台的「参数组」功能修改，部分参数修改后需要重启实例生效
+
+**使用方式**：
+```bash
+# 1. 配置文件中填写托管数据库的连接地址
+MYSQL_HOST=your-instance.xxx.rds.amazonaws.com
+MYSQL_PORT=3306
+MYSQL_USER=admin
+MYSQL_PASSWORD=your_password
+
+# 2. 直接运行压测脚本（会跳过 SSH 相关步骤，tsar 数据为空属正常）
+./mysql_benchmark.sh benchmark_config.conf
+
+# 3. 生成的报告中 CPU/IO 列为 N/A，需结合云厂商监控面板查看
+```
+
 ## 注意事项
 
-1. **测试前必须启动 tsar**: 在 MySQL 服务器上手动启动 tsar 监控
-2. **磁盘设备名**: 根据实际环境修改 tsar 命令中的磁盘设备名
-3. **网络延迟**: 压测客户端与 MySQL 服务器网络延迟会影响结果
-4. **数据准备**: 首次测试设置 `NEED_PREPARE=true`，后续可设为 `false`
-5. **权限要求**: 需要 MySQL 服务器的 SSH root 权限用于监控数据采集
+1. **测试前必须启动 tsar**: 在 MySQL 服务器上手动启动 tsar 监控（仅自建环境）
+2. **max_prepared_stmt_count**: 必须在 prepare 之前调大到 1048576，否则高并发会报错
+3. **磁盘设备名**: 根据实际环境修改 tsar 命令中的磁盘设备名
+4. **网络延迟**: 压测客户端与 MySQL 服务器网络延迟会影响结果，建议同 VPC/同机房
+5. **数据准备**: 首次测试设置 `NEED_PREPARE=true`，后续可设为 `false`
+6. **权限要求**: 自建环境需要 SSH root 权限；PaaS 环境无需 SSH，但需配置参数组
 
 ## 许可证
 
